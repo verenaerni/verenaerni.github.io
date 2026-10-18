@@ -83,7 +83,7 @@
     clearTimeout(introTimer);
     intro.classList.add('is-turning');
     startFilm();
-    introTimer = setTimeout(closeIntro, 1180);
+    introTimer = setTimeout(closeIntro, 760);
   }
   function closeIntro() {
     if (!intro.classList.contains('is-active') || intro.classList.contains('is-leaving')) return;
@@ -91,7 +91,7 @@
     clearTimeout(introTimer);
     intro.classList.add('is-leaving');
     startFilm();
-    closeTimer = setTimeout(finishIntro, reduced.matches ? 0 : 260);
+    closeTimer = setTimeout(finishIntro, reduced.matches ? 0 : 420);
   }
   function showIntro(event) {
     clearTimeout(closeTimer); clearTimeout(introTimer); clearTimeout(openingTimer);
