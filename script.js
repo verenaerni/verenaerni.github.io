@@ -57,6 +57,9 @@
   const replay = document.getElementById('intro-replay');
   let restoreReplayFocus = false;
   let introTimer, closeTimer, openingTimer, revealFrame;
+  const coverReadingTime = 1800;
+  const coverOpeningTime = 1250; // Matches the book-cover transition in styles.css.
+  const spreadReadingTime = 2600;
   const revealDuration = 1450;
   const introBackground = [...document.querySelectorAll('body > .skip-link, body > header, body > main, body > footer')];
   function resetReveal() {
@@ -109,7 +112,8 @@
     clearTimeout(openingTimer);
     intro.classList.add('is-opening');
     startFilm();
-    introTimer = setTimeout(turnPage, 1300);
+    // Hold the fully opened, printed spread before turning to the blank leaf.
+    introTimer = setTimeout(turnPage, coverOpeningTime + spreadReadingTime);
   }
   function turnPage() {
     if (!intro.classList.contains('is-active') || intro.classList.contains('is-turning')) return;
@@ -140,7 +144,7 @@
     restoreReplayFocus = !!event && replay.matches(':focus-visible');
     introBackground.forEach(element => { element.inert = true; });
     intro.focus({ preventScroll: true });
-    openingTimer = setTimeout(openBook, 200);
+    openingTimer = setTimeout(openBook, coverReadingTime);
   }
   replay.addEventListener('click', showIntro);
   document.addEventListener('keydown', event => { if (event.key === 'Escape' && intro.classList.contains('is-active')) finishIntro(); });

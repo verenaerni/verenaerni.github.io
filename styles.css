@@ -130,7 +130,7 @@ blockquote{margin:0}.quote-interlude{padding:85px var(--gutter);display:grid;gri
 .intro{opacity:1;transition:opacity 1.45s ease}
 .intro.is-leaving{opacity:0}
 .intro.is-leaving.is-spreading{opacity:1;transition:none}
-.intro-scene{position:relative;perspective:2200px;opacity:1;transition:opacity 1.25s cubic-bezier(.22,.61,.36,1)}
+.intro-scene{position:relative;perspective:2200px;opacity:1;transition:opacity .65s cubic-bezier(.22,.61,.36,1)}
 .intro.is-leaving .intro-scene{opacity:0}
 .intro.is-leaving .intro-paper{opacity:1}
 .intro.is-spreading .intro-paper{-webkit-mask-image:radial-gradient(ellipse var(--reveal-rx) var(--reveal-ry) at var(--reveal-x) var(--reveal-y),transparent 0%,transparent 72%,#000 100%);mask-image:radial-gradient(ellipse var(--reveal-rx) var(--reveal-ry) at var(--reveal-x) var(--reveal-y),transparent 0%,transparent 72%,#000 100%)}
