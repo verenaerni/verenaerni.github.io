@@ -81,9 +81,9 @@ blockquote{margin:0}.quote-interlude{padding:85px var(--gutter);display:grid;gri
 
 /* A second physical leaf carries the book directly into the live page. */
 @font-face{font-family:'Libre Baskerville';src:url('assets/fonts/libre-baskerville-italic-variable.ttf') format('truetype');font-weight:400 700;font-style:italic;font-display:swap}
-.intro-book{width:min(1100px,94vw);height:min(680px,74vw,76svh);transform:translateX(-24%) rotateX(8deg) rotateY(-18deg) rotateZ(-3deg);transition:transform 1.55s cubic-bezier(.3,.02,.18,1)}
-.book-cover{transition-duration:1.55s}
-.book-leaf{position:absolute;inset:0 0 0 50%;transform-origin:left center;transform:translateZ(3px);transform-style:preserve-3d;transition:transform 1.15s cubic-bezier(.32,.02,.18,1);z-index:1}
+.intro-book{width:min(1100px,94vw);height:min(680px,74vw,76svh);transform:translateX(-24%) rotateX(8deg) rotateY(-18deg) rotateZ(-3deg);transition:transform 1.25s cubic-bezier(.3,.02,.18,1)}
+.book-cover{transition-duration:1.25s}
+.book-leaf{position:absolute;inset:0 0 0 50%;transform-origin:left center;transform:translateZ(3px);transform-style:preserve-3d;transition:transform .74s cubic-bezier(.32,.02,.18,1);z-index:1}
 .leaf-face{position:absolute;inset:0;backface-visibility:hidden;border-radius:0 3px 3px 0;background:linear-gradient(90deg,#e3d5c4,#fffbf3 10%,#faf3e8 95%,#dcccb9);overflow:hidden}
 .leaf-front{transform:translateZ(.5px)}
 .leaf-front:after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,#35283e17,transparent 18%,transparent 78%,#35283e07);transition:opacity 1.15s;pointer-events:none}
@@ -92,7 +92,7 @@ blockquote{margin:0}.quote-interlude{padding:85px var(--gutter);display:grid;gri
 .leaf-back em{font-style:italic;color:#80616f}
 .intro.is-turning .book-leaf{transform:translateZ(3px) rotateY(-178deg)}
 .intro.is-turning .leaf-front:after{opacity:.15}
-.intro.is-turning .intro-book{transform:translateX(0) rotateX(1deg) rotateY(0deg) rotateZ(0deg) scale(1.035);transition:transform 1.15s cubic-bezier(.32,.02,.18,1)}
+.intro.is-turning .intro-book{transform:translateX(0) rotateX(1deg) rotateY(0deg) rotateZ(0deg) scale(1.035);transition:transform .74s cubic-bezier(.32,.02,.18,1)}
 .intro-paper{transition:opacity .24s ease}
 .intro.is-leaving .intro-book{transition:opacity .24s ease,transform .24s ease;transform:translateX(0) scale(1.065)}
 /* Selective italic emphasis and spacious quotation typography. */
@@ -126,17 +126,12 @@ blockquote{margin:0}.quote-interlude{padding:85px var(--gutter);display:grid;gri
 .about-quote{padding:24px 0 0;margin-top:32px}
 .about-quote figcaption{margin-left:3.5em;margin-top:20px}
 .quote-interlude{padding-top:100px;padding-bottom:100px}
-/* Fade the already composed scene during the end of the blank leaf turn. */
-.intro{opacity:1;transition:opacity .42s linear}
+/* Keep the 3D scene intact and dissolve it over the film's final, stationary layout. */
+.intro{opacity:1;transition:opacity .62s cubic-bezier(.3,0,.2,1)}
 .intro.is-leaving{opacity:0}
 .intro.is-leaving .intro-paper{opacity:1}
-.intro.is-leaving .intro-book{opacity:1;transform:translateX(0) rotateX(1deg) rotateY(0deg) rotateZ(0deg) scale(1.035);transition:transform 1.15s cubic-bezier(.32,.02,.18,1)}
+.intro.is-leaving .intro-book{opacity:1;transform:translateX(0) rotateX(1deg) rotateY(0deg) rotateZ(0deg) scale(1.035);transition:transform .74s cubic-bezier(.32,.02,.18,1)}
 @media(max-width:820px){.quote-interlude{padding-top:65px;padding-bottom:65px}.quote-interlude>figcaption{margin-bottom:30px}.about-quote{padding-top:20px;margin-top:30px}.about-quote figcaption{margin-left:3em}}
-
-/* The original live film occupies the last page, then settles into its regular position. */
-.hero-media.is-book-video{position:fixed!important;left:var(--film-x);top:var(--film-y);width:var(--film-width);height:var(--film-height);max-width:none;max-height:none;aspect-ratio:auto;z-index:120;margin:0;transform-origin:0 0;will-change:transform,border-radius,opacity;pointer-events:none}
-.film-placeholder{width:100%;pointer-events:none}
-.intro{transition:opacity .65s cubic-bezier(.25,.1,.25,1)}
 
 /* Keep the landing position unchanged when the intro releases its scroll lock. */
 html{scrollbar-gutter:stable}

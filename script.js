@@ -55,44 +55,11 @@
 
   const intro = document.getElementById('intro');
   const replay = document.getElementById('intro-replay');
-  const filmFrame = document.getElementById('hero-media');
-  let filmMorph = null, filmPlaceholder = null;
   let restoreReplayFocus = false;
   let introTimer, closeTimer, openingTimer;
   const introBackground = [...document.querySelectorAll('body > .skip-link, body > header, body > main, body > footer')];
-  function restoreFilmFrame() {
-    if (filmMorph) { filmMorph.cancel(); filmMorph = null; }
-    filmFrame.classList.remove('is-book-video');
-    ['--film-x', '--film-y', '--film-width', '--film-height'].forEach(name => filmFrame.style.removeProperty(name));
-    if (filmPlaceholder) { filmPlaceholder.remove(); filmPlaceholder = null; }
-  }
-  function revealFilmFromPage() {
-    const page = intro.querySelector('.book-page-right').getBoundingClientRect();
-    const target = filmFrame.getBoundingClientRect();
-    if (!page.width || !target.width || typeof filmFrame.animate !== 'function') return false;
-    const radius = getComputedStyle(filmFrame).borderRadius;
-    // Reserve the original space while this same, still-playing video frame travels from the page.
-    filmPlaceholder = document.createElement('div');
-    filmPlaceholder.setAttribute('aria-hidden', 'true');
-    filmPlaceholder.className = 'film-placeholder';
-    filmPlaceholder.style.height = `${target.height}px`;
-    filmFrame.before(filmPlaceholder);
-    filmFrame.style.setProperty('--film-x', `${target.left}px`);
-    filmFrame.style.setProperty('--film-y', `${target.top}px`);
-    filmFrame.style.setProperty('--film-width', `${target.width}px`);
-    filmFrame.style.setProperty('--film-height', `${target.height}px`);
-    filmFrame.classList.add('is-book-video');
-    const from = `translate(${page.left - target.left}px, ${page.top - target.top}px) scale(${page.width / target.width}, ${page.height / target.height})`;
-    filmMorph = filmFrame.animate([
-      { transform: from, borderRadius: '2px', opacity: 0, offset: 0 },
-      { transform: from, borderRadius: '2px', opacity: 1, offset: 0.22, easing: 'cubic-bezier(.22,.75,.22,1)' },
-      { transform: 'none', borderRadius: radius, opacity: 1, offset: 1 }
-    ], { duration: 900, easing: 'linear', fill: 'both' });
-    return true;
-  }
   function finishIntro() {
     clearTimeout(introTimer); clearTimeout(closeTimer); clearTimeout(openingTimer);
-    restoreFilmFrame();
     intro.classList.remove('is-active', 'is-leaving', 'is-opening', 'is-turning');
     intro.setAttribute('aria-hidden', 'true');
     document.documentElement.classList.remove('intro-open');
@@ -109,27 +76,26 @@
     clearTimeout(openingTimer);
     intro.classList.add('is-opening');
     startFilm();
-    introTimer = setTimeout(turnPage, 1710);
+    introTimer = setTimeout(turnPage, 1300);
   }
   function turnPage() {
     if (!intro.classList.contains('is-active') || intro.classList.contains('is-turning')) return;
     clearTimeout(introTimer);
     intro.classList.add('is-turning');
     startFilm();
-    introTimer = setTimeout(closeIntro, 760);
+    // Dissolve as the blank paper is revealed; the leaf keeps moving throughout.
+    introTimer = setTimeout(closeIntro, 120);
   }
   function closeIntro() {
     if (!intro.classList.contains('is-active') || intro.classList.contains('is-leaving')) return;
     if (!intro.classList.contains('is-opening')) { openBook(); return; }
     clearTimeout(introTimer);
-    const morphing = !reduced.matches && revealFilmFromPage();
     intro.classList.add('is-leaving');
     startFilm();
-    closeTimer = setTimeout(finishIntro, reduced.matches ? 0 : morphing ? 940 : 650);
+    closeTimer = setTimeout(finishIntro, reduced.matches ? 0 : 640);
   }
   function showIntro(event) {
     clearTimeout(closeTimer); clearTimeout(introTimer); clearTimeout(openingTimer);
-    restoreFilmFrame();
     if (reduced.matches) { finishIntro(); return; }
     scrollTo({ top: 0, behavior: 'instant' });
     intro.classList.remove('is-leaving', 'is-opening', 'is-turning');
@@ -139,11 +105,11 @@
     restoreReplayFocus = !!event && replay.matches(':focus-visible');
     introBackground.forEach(element => { element.inert = true; });
     intro.focus({ preventScroll: true });
-    openingTimer = setTimeout(openBook, 450);
+    openingTimer = setTimeout(openBook, 200);
   }
   replay.addEventListener('click', showIntro);
   document.addEventListener('keydown', event => { if (event.key === 'Escape' && intro.classList.contains('is-active')) finishIntro(); });
-  addEventListener('resize', () => { if (filmMorph) finishIntro(); });
+  addEventListener('resize', () => { if (intro.classList.contains('is-leaving')) finishIntro(); });
   // A deep link opens its destination immediately. The film plays behind the book.
   if (!location.hash && !reduced.matches) showIntro();
 
