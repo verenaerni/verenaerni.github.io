@@ -127,11 +127,18 @@ blockquote{margin:0}.quote-interlude{padding:85px var(--gutter);display:grid;gri
 .about-quote figcaption{margin-left:3.5em;margin-top:20px}
 .quote-interlude{padding-top:100px;padding-bottom:100px}
 /* Keep the 3D scene intact and dissolve it over the film's final, stationary layout. */
-.intro{opacity:1;transition:opacity .62s cubic-bezier(.3,0,.2,1)}
+.intro{opacity:1;transition:opacity 1.45s ease}
 .intro.is-leaving{opacity:0}
+.intro.is-leaving.is-spreading{opacity:1;transition:none}
+.intro-scene{position:relative;perspective:2200px;opacity:1;transition:opacity 1.25s cubic-bezier(.22,.61,.36,1)}
+.intro.is-leaving .intro-scene{opacity:0}
 .intro.is-leaving .intro-paper{opacity:1}
+.intro.is-spreading .intro-paper{-webkit-mask-image:radial-gradient(ellipse var(--reveal-rx) var(--reveal-ry) at var(--reveal-x) var(--reveal-y),transparent 0%,transparent 72%,#000 100%);mask-image:radial-gradient(ellipse var(--reveal-rx) var(--reveal-ry) at var(--reveal-x) var(--reveal-y),transparent 0%,transparent 72%,#000 100%)}
 .intro.is-leaving .intro-book{opacity:1;transform:translateX(0) rotateX(1deg) rotateY(0deg) rotateZ(0deg) scale(1.035);transition:transform .74s cubic-bezier(.32,.02,.18,1)}
 @media(max-width:820px){.quote-interlude{padding-top:65px;padding-bottom:65px}.quote-interlude>figcaption{margin-bottom:30px}.about-quote{padding-top:20px;margin-top:30px}.about-quote figcaption{margin-left:3em}}
 
 /* Keep the landing position unchanged when the intro releases its scroll lock. */
 html{scrollbar-gutter:stable}
+
+/* The turned blank leaf rests above the first, printed inside cover. */
+.intro.is-turning .book-cover{transform:translateZ(1px) rotateY(-180deg);transition-duration:.74s}

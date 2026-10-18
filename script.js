@@ -56,11 +56,44 @@
   const intro = document.getElementById('intro');
   const replay = document.getElementById('intro-replay');
   let restoreReplayFocus = false;
-  let introTimer, closeTimer, openingTimer;
+  let introTimer, closeTimer, openingTimer, revealFrame;
+  const revealDuration = 1450;
   const introBackground = [...document.querySelectorAll('body > .skip-link, body > header, body > main, body > footer')];
+  function resetReveal() {
+    cancelAnimationFrame(revealFrame);
+    revealFrame = 0;
+    ['--reveal-x', '--reveal-y', '--reveal-rx', '--reveal-ry'].forEach(name => intro.style.removeProperty(name));
+  }
+  function spreadFromBook() {
+    const gradient = 'radial-gradient(ellipse at center, transparent, black)';
+    if (!CSS.supports('mask-image', gradient) && !CSS.supports('-webkit-mask-image', gradient)) return;
+    const page = intro.querySelector('.book-page-right').getBoundingClientRect();
+    const x = page.left + page.width / 2;
+    const y = page.top + page.height / 2;
+    // The soft aperture grows from the last page. The original film never moves or reloads.
+    const rx = Math.max(x, innerWidth - x) * 2;
+    const ry = Math.max(y, innerHeight - y) * 2;
+    intro.style.setProperty('--reveal-x', `${x}px`);
+    intro.style.setProperty('--reveal-y', `${y}px`);
+    intro.style.setProperty('--reveal-rx', '1px');
+    intro.style.setProperty('--reveal-ry', '1px');
+    intro.classList.add('is-spreading');
+    let started;
+    function expand(time) {
+      if (!intro.classList.contains('is-leaving')) return;
+      if (started === undefined) started = time;
+      const progress = Math.min(1, (time - started) / revealDuration);
+      const eased = (1 - Math.cos(Math.PI * progress)) / 2;
+      intro.style.setProperty('--reveal-rx', `${1 + rx * eased}px`);
+      intro.style.setProperty('--reveal-ry', `${1 + ry * eased}px`);
+      if (progress < 1) revealFrame = requestAnimationFrame(expand);
+    }
+    revealFrame = requestAnimationFrame(expand);
+  }
   function finishIntro() {
     clearTimeout(introTimer); clearTimeout(closeTimer); clearTimeout(openingTimer);
-    intro.classList.remove('is-active', 'is-leaving', 'is-opening', 'is-turning');
+    intro.classList.remove('is-active', 'is-leaving', 'is-opening', 'is-turning', 'is-spreading');
+    resetReveal();
     intro.setAttribute('aria-hidden', 'true');
     document.documentElement.classList.remove('intro-open');
     introBackground.forEach(element => { element.inert = false; });
@@ -90,15 +123,17 @@
     if (!intro.classList.contains('is-active') || intro.classList.contains('is-leaving')) return;
     if (!intro.classList.contains('is-opening')) { openBook(); return; }
     clearTimeout(introTimer);
+    spreadFromBook();
     intro.classList.add('is-leaving');
     startFilm();
-    closeTimer = setTimeout(finishIntro, reduced.matches ? 0 : 640);
+    closeTimer = setTimeout(finishIntro, reduced.matches ? 0 : revealDuration + 80);
   }
   function showIntro(event) {
     clearTimeout(closeTimer); clearTimeout(introTimer); clearTimeout(openingTimer);
     if (reduced.matches) { finishIntro(); return; }
     scrollTo({ top: 0, behavior: 'instant' });
-    intro.classList.remove('is-leaving', 'is-opening', 'is-turning');
+    resetReveal();
+    intro.classList.remove('is-leaving', 'is-opening', 'is-turning', 'is-spreading');
     intro.classList.add('is-active');
     intro.setAttribute('aria-hidden', 'false');
     document.documentElement.classList.add('intro-open');
