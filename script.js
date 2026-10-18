@@ -7,6 +7,7 @@
   let explicitlyPaused = false;
   video.muted = true;
   video.defaultMuted = true;
+  video.playsInline = true;
   function updateFilm() {
     const playing = !video.paused;
     control.querySelector('.control-symbol').textContent = playing ? 'Ⅱ' : '▷';
@@ -15,7 +16,7 @@
     control.setAttribute('aria-pressed', String(!playing));
   }
   function startFilm() {
-    if (explicitlyPaused || document.hidden) return;
+    if (explicitlyPaused || document.hidden || !video.paused) return;
     video.muted = true;
     video.play().catch(updateFilm);
   }
@@ -30,13 +31,23 @@
   addEventListener('pageshow', startFilm);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) startFilm(); });
   // First interaction is a fallback for browsers that restrict even muted autoplay.
-  document.addEventListener('pointerdown', event => { if (!control.contains(event.target) && video.paused) startFilm(); }, { passive: true });
-  document.addEventListener('keydown', event => { if (!control.contains(event.target) && video.paused) startFilm(); });
+  function resumeFromGesture(event) {
+    if (!control.contains(event.target)) startFilm();
+  }
+  // iOS recognises touchend/click as a media gesture; pointerdown alone is insufficient.
+  document.addEventListener('touchend', resumeFromGesture, { passive: true });
+  document.addEventListener('click', resumeFromGesture);
+  document.addEventListener('keydown', resumeFromGesture);
+  // On narrow screens the film may enter the viewport only after the introduction.
+  const filmVisibility = new IntersectionObserver(entries => {
+    if (entries.some(entry => entry.isIntersecting)) startFilm();
+  }, { threshold: 0.05 });
+  filmVisibility.observe(video);
   startFilm();
 
   const intro = document.getElementById('intro');
-  const introSkip = document.getElementById('intro-skip');
   const replay = document.getElementById('intro-replay');
+  let restoreReplayFocus = false;
   let introTimer, closeTimer, openingTimer;
   const introBackground = [...document.querySelectorAll('body > .skip-link, body > header, body > main, body > footer')];
   function finishIntro() {
@@ -45,7 +56,12 @@
     intro.setAttribute('aria-hidden', 'true');
     document.documentElement.classList.remove('intro-open');
     introBackground.forEach(element => { element.inert = false; });
-    if (intro.contains(document.activeElement)) document.querySelector('.brand').focus({ preventScroll: true });
+    if (intro.contains(document.activeElement)) document.activeElement.blur();
+    if (restoreReplayFocus) replay.focus({ preventScroll: true });
+    restoreReplayFocus = false;
+    // Retry once the covering book is actually gone, including a rendered frame on iOS.
+    startFilm();
+    requestAnimationFrame(startFilm);
   }
   function openBook() {
     if (!intro.classList.contains('is-active') || intro.classList.contains('is-opening')) return;
@@ -60,10 +76,9 @@
     clearTimeout(introTimer);
     intro.classList.add('is-leaving');
     startFilm();
-    introSkip.tabIndex = -1;
     closeTimer = setTimeout(finishIntro, reduced.matches ? 0 : 900);
   }
-  function showIntro() {
+  function showIntro(event) {
     clearTimeout(closeTimer); clearTimeout(introTimer); clearTimeout(openingTimer);
     if (reduced.matches) { finishIntro(); return; }
     scrollTo({ top: 0, behavior: 'instant' });
@@ -71,14 +86,13 @@
     intro.classList.add('is-active');
     intro.setAttribute('aria-hidden', 'false');
     document.documentElement.classList.add('intro-open');
-    introSkip.tabIndex = 0;
+    restoreReplayFocus = !!event && replay.matches(':focus-visible');
     introBackground.forEach(element => { element.inert = true; });
-    introSkip.focus({ preventScroll: true });
+    intro.focus({ preventScroll: true });
     openingTimer = setTimeout(openBook, 950);
   }
-  introSkip.addEventListener('click', closeIntro);
   replay.addEventListener('click', showIntro);
-  document.addEventListener('keydown', event => { if (event.key === 'Escape') closeIntro(); });
+  document.addEventListener('keydown', event => { if (event.key === 'Escape' && intro.classList.contains('is-active')) finishIntro(); });
   // A deep link opens its destination immediately. The film plays behind the book.
   if (!location.hash && !reduced.matches) showIntro();
 
