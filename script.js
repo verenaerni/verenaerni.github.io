@@ -60,7 +60,7 @@
   const introBackground = [...document.querySelectorAll('body > .skip-link, body > header, body > main, body > footer')];
   function finishIntro() {
     clearTimeout(introTimer); clearTimeout(closeTimer); clearTimeout(openingTimer);
-    intro.classList.remove('is-active', 'is-leaving', 'is-opening');
+    intro.classList.remove('is-active', 'is-leaving', 'is-opening', 'is-turning');
     intro.setAttribute('aria-hidden', 'true');
     document.documentElement.classList.remove('intro-open');
     introBackground.forEach(element => { element.inert = false; });
@@ -76,7 +76,14 @@
     clearTimeout(openingTimer);
     intro.classList.add('is-opening');
     startFilm();
-    introTimer = setTimeout(closeIntro, 2950);
+    introTimer = setTimeout(turnPage, 1710);
+  }
+  function turnPage() {
+    if (!intro.classList.contains('is-active') || intro.classList.contains('is-turning')) return;
+    clearTimeout(introTimer);
+    intro.classList.add('is-turning');
+    startFilm();
+    introTimer = setTimeout(closeIntro, 1180);
   }
   function closeIntro() {
     if (!intro.classList.contains('is-active') || intro.classList.contains('is-leaving')) return;
@@ -84,20 +91,20 @@
     clearTimeout(introTimer);
     intro.classList.add('is-leaving');
     startFilm();
-    closeTimer = setTimeout(finishIntro, reduced.matches ? 0 : 900);
+    closeTimer = setTimeout(finishIntro, reduced.matches ? 0 : 260);
   }
   function showIntro(event) {
     clearTimeout(closeTimer); clearTimeout(introTimer); clearTimeout(openingTimer);
     if (reduced.matches) { finishIntro(); return; }
     scrollTo({ top: 0, behavior: 'instant' });
-    intro.classList.remove('is-leaving', 'is-opening');
+    intro.classList.remove('is-leaving', 'is-opening', 'is-turning');
     intro.classList.add('is-active');
     intro.setAttribute('aria-hidden', 'false');
     document.documentElement.classList.add('intro-open');
     restoreReplayFocus = !!event && replay.matches(':focus-visible');
     introBackground.forEach(element => { element.inert = true; });
     intro.focus({ preventScroll: true });
-    openingTimer = setTimeout(openBook, 950);
+    openingTimer = setTimeout(openBook, 450);
   }
   replay.addEventListener('click', showIntro);
   document.addEventListener('keydown', event => { if (event.key === 'Escape' && intro.classList.contains('is-active')) finishIntro(); });
