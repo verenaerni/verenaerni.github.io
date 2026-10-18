@@ -132,3 +132,11 @@ blockquote{margin:0}.quote-interlude{padding:85px var(--gutter);display:grid;gri
 .intro.is-leaving .intro-paper{opacity:1}
 .intro.is-leaving .intro-book{opacity:1;transform:translateX(0) rotateX(1deg) rotateY(0deg) rotateZ(0deg) scale(1.035);transition:transform 1.15s cubic-bezier(.32,.02,.18,1)}
 @media(max-width:820px){.quote-interlude{padding-top:65px;padding-bottom:65px}.quote-interlude>figcaption{margin-bottom:30px}.about-quote{padding-top:20px;margin-top:30px}.about-quote figcaption{margin-left:3em}}
+
+/* The original live film occupies the last page, then settles into its regular position. */
+.hero-media.is-book-video{position:fixed!important;left:var(--film-x);top:var(--film-y);width:var(--film-width);height:var(--film-height);max-width:none;max-height:none;aspect-ratio:auto;z-index:120;margin:0;transform-origin:0 0;will-change:transform,border-radius,opacity;pointer-events:none}
+.film-placeholder{width:100%;pointer-events:none}
+.intro{transition:opacity .65s cubic-bezier(.25,.1,.25,1)}
+
+/* Keep the landing position unchanged when the intro releases its scroll lock. */
+html{scrollbar-gutter:stable}
