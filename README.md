@@ -1,4 +1,4 @@
-# Verena Christine Erni — VCE Verbindung
+# Verena Erni — VCE Verbindung
 
 Website-Entwurf zur Abstimmung.
 
