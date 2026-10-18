@@ -60,38 +60,48 @@
   const coverReadingTime = 1800;
   const coverOpeningTime = 1250; // Matches the book-cover transition in styles.css.
   const spreadReadingTime = 2600;
-  const revealDuration = 1450;
+  const revealDuration = 1200;
+  let introViewportWidth = innerWidth;
   const introBackground = [...document.querySelectorAll('body > .skip-link, body > header, body > main, body > footer')];
   function resetReveal() {
     cancelAnimationFrame(revealFrame);
     revealFrame = 0;
-    ['--reveal-x', '--reveal-y', '--reveal-rx', '--reveal-ry'].forEach(name => intro.style.removeProperty(name));
+    ['--reveal-x', '--reveal-y', '--reveal-rx', '--reveal-ry', '--reveal-progress'].forEach(name => intro.style.removeProperty(name));
   }
   function spreadFromBook() {
     const gradient = 'radial-gradient(ellipse at center, transparent, black)';
-    if (!CSS.supports('mask-image', gradient) && !CSS.supports('-webkit-mask-image', gradient)) return;
+    if (!CSS.supports('mask-image', gradient) && !CSS.supports('-webkit-mask-image', gradient)) return false;
     const page = intro.querySelector('.book-page-right').getBoundingClientRect();
     const x = page.left + page.width / 2;
     const y = page.top + page.height / 2;
-    // The soft aperture grows from the last page. The original film never moves or reloads.
+    // Start across the blank page, rather than opening a tiny, hard-edged hole.
+    // Paper and book share one progress value; the original film stays in place.
+    const initialRx = Math.max(1, page.width * .48);
+    const initialRy = Math.max(1, page.height * .48);
     const rx = Math.max(x, innerWidth - x) * 2;
     const ry = Math.max(y, innerHeight - y) * 2;
     intro.style.setProperty('--reveal-x', `${x}px`);
     intro.style.setProperty('--reveal-y', `${y}px`);
-    intro.style.setProperty('--reveal-rx', '1px');
-    intro.style.setProperty('--reveal-ry', '1px');
+    intro.style.setProperty('--reveal-rx', `${initialRx}px`);
+    intro.style.setProperty('--reveal-ry', `${initialRy}px`);
+    intro.style.setProperty('--reveal-progress', '0');
     intro.classList.add('is-spreading');
     let started;
     function expand(time) {
       if (!intro.classList.contains('is-leaving')) return;
       if (started === undefined) started = time;
       const progress = Math.min(1, (time - started) / revealDuration);
-      const eased = (1 - Math.cos(Math.PI * progress)) / 2;
-      intro.style.setProperty('--reveal-rx', `${1 + rx * eased}px`);
-      intro.style.setProperty('--reveal-ry', `${1 + ry * eased}px`);
+      const eased = progress * progress * (3 - 2 * progress);
+      intro.style.setProperty('--reveal-progress', String(eased));
+      intro.style.setProperty('--reveal-rx', `${initialRx + rx * eased}px`);
+      intro.style.setProperty('--reveal-ry', `${initialRy + ry * eased}px`);
       if (progress < 1) revealFrame = requestAnimationFrame(expand);
+      // Remove the overlay only after its fully transparent frame was rendered.
+      // A wall-clock timeout can otherwise cut a busy iPhone's last frames short.
+      else closeTimer = setTimeout(finishIntro, 80);
     }
     revealFrame = requestAnimationFrame(expand);
+    return true;
   }
   function finishIntro() {
     clearTimeout(introTimer); clearTimeout(closeTimer); clearTimeout(openingTimer);
@@ -121,22 +131,23 @@
     intro.classList.add('is-turning');
     startFilm();
     // Dissolve as the blank paper is revealed; the leaf keeps moving throughout.
-    introTimer = setTimeout(closeIntro, 120);
+    introTimer = setTimeout(closeIntro, 60);
   }
   function closeIntro() {
     if (!intro.classList.contains('is-active') || intro.classList.contains('is-leaving')) return;
     if (!intro.classList.contains('is-opening')) { openBook(); return; }
     clearTimeout(introTimer);
-    spreadFromBook();
+    const spreading = spreadFromBook();
     intro.classList.add('is-leaving');
     startFilm();
-    closeTimer = setTimeout(finishIntro, reduced.matches ? 0 : revealDuration + 80);
+    if (!spreading) closeTimer = setTimeout(finishIntro, reduced.matches ? 0 : revealDuration + 80);
   }
   function showIntro(event) {
     clearTimeout(closeTimer); clearTimeout(introTimer); clearTimeout(openingTimer);
     if (reduced.matches) { finishIntro(); return; }
     scrollTo({ top: 0, behavior: 'instant' });
     resetReveal();
+    introViewportWidth = innerWidth;
     intro.classList.remove('is-leaving', 'is-opening', 'is-turning', 'is-spreading');
     intro.classList.add('is-active');
     intro.setAttribute('aria-hidden', 'false');
@@ -148,7 +159,12 @@
   }
   replay.addEventListener('click', showIntro);
   document.addEventListener('keydown', event => { if (event.key === 'Escape' && intro.classList.contains('is-active')) finishIntro(); });
-  addEventListener('resize', () => { if (intro.classList.contains('is-leaving')) finishIntro(); });
+  addEventListener('resize', () => {
+    // Safari's collapsing browser bars change height without changing the layout width.
+    // Keep dissolving through those events; only a new width invalidates the scene.
+    if (intro.classList.contains('is-leaving') && Math.abs(innerWidth - introViewportWidth) > 2) finishIntro();
+    introViewportWidth = innerWidth;
+  });
   // A deep link opens its destination immediately. The film plays behind the book.
   if (!location.hash && !reduced.matches) showIntro();
 
