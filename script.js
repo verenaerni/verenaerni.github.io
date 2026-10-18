@@ -4,6 +4,7 @@
   const video = document.getElementById('portrait-film');
   const control = document.getElementById('video-control');
   const status = document.getElementById('video-status');
+  const filmFallback = document.getElementById('film-fallback');
   let explicitlyPaused = false;
   video.muted = true;
   video.defaultMuted = true;
@@ -18,14 +19,20 @@
   function startFilm() {
     if (explicitlyPaused || document.hidden || !video.paused) return;
     video.muted = true;
-    video.play().catch(updateFilm);
+    video.play().catch(() => updateFilm());
   }
-  video.addEventListener('playing', updateFilm);
+  video.addEventListener('playing', () => { video.controls = false; filmFallback.hidden = true; updateFilm(); });
   video.addEventListener('pause', updateFilm);
   video.addEventListener('canplay', startFilm);
-  video.addEventListener('error', () => { status.textContent = 'Der Film ist momentan nicht verfügbar.'; updateFilm(); });
+  video.addEventListener('error', () => { status.textContent = 'Der Film ist momentan nicht verfügbar.'; filmFallback.hidden = false; updateFilm(); });
   control.addEventListener('click', () => {
-    if (video.paused) { explicitlyPaused = false; startFilm(); }
+    if (video.paused) {
+      explicitlyPaused = false;
+      video.muted = true;
+      // Call play directly inside the tap handler. Retry loading only after a real media error.
+      if (video.error) video.load();
+      video.play().catch(() => { video.controls = true; filmFallback.hidden = false; updateFilm(); });
+    }
     else { explicitlyPaused = true; video.pause(); }
   });
   addEventListener('pageshow', startFilm);
@@ -43,6 +50,7 @@
     if (entries.some(entry => entry.isIntersecting)) startFilm();
   }, { threshold: 0.05 });
   filmVisibility.observe(video);
+  updateFilm();
   startFilm();
 
   const intro = document.getElementById('intro');
@@ -68,7 +76,7 @@
     clearTimeout(openingTimer);
     intro.classList.add('is-opening');
     startFilm();
-    introTimer = setTimeout(closeIntro, 2500);
+    introTimer = setTimeout(closeIntro, 2950);
   }
   function closeIntro() {
     if (!intro.classList.contains('is-active') || intro.classList.contains('is-leaving')) return;
